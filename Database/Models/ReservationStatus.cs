@@ -6,5 +6,5 @@ public enum ReservationStatus
     Accepted,
     InProgress,
     Finished,
-    Payed
+    Paid
 }

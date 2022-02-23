@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using JobPortalApi.Models;
 using JobPortalApi.Models.Requests;
 using JobPortalApi.Models.Responses;
 using JobPortalApi.Providers;
