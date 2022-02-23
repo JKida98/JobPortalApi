@@ -28,4 +28,19 @@ public class ReservationLinesController : BaseApiController
             return ErrorResponse(e.Message, 400);
         }
     }
+    
+    
+    [HttpPost]
+    [Route("{reservationLineId:guid}/status/{currentStatus:int}")]
+    public async Task<IActionResult> ChangeReservationLineStatus(Guid reservationLineId, int currentStatus)
+    {
+        try
+        {
+            return Ok(true);
+        }
+        catch (Exception e)
+        {
+            return ErrorResponse(e.Message, 400);
+        }
+    }
 }

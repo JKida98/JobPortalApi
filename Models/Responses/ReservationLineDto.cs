@@ -5,6 +5,8 @@ namespace JobPortalApi.Models.Responses;
 
 public class ReservationLineDto
 {
+    public Guid Id { get; set; }
+    
     public Guid OfferId { get; set; }
     
     public OfferDto Offer { get; set; }
