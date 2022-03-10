@@ -16,7 +16,7 @@ public class ReservationLinesController : BaseApiController
 
     [HttpGet]
     [Route("{reservationId:guid}")]
-    public async Task<IActionResult> GetReservationLinesForReservation(Guid reservationId)
+    public async Task<IActionResult> GetReservationLinesForReservationAsync(Guid reservationId)
     {
         try
         {
@@ -28,15 +28,16 @@ public class ReservationLinesController : BaseApiController
             return ErrorResponse(e.Message, 400);
         }
     }
-    
-    
+
+
     [HttpPost]
     [Route("{reservationLineId:guid}/status/{currentStatus:int}")]
-    public async Task<IActionResult> ChangeReservationLineStatus(Guid reservationLineId, int currentStatus)
+    public async Task<IActionResult> ChangeReservationLineStatusAsync(Guid reservationLineId, int currentStatus)
     {
         try
         {
-            return Ok(true);
+            var result = await _unitOfWork.ChangeReservationLineStatusAsync(reservationLineId, currentStatus);
+            return Ok(result);
         }
         catch (Exception e)
         {

@@ -5,11 +5,13 @@ using System.Threading.Tasks;
 using JobPortalApi.Database;
 using JobPortalApi.Database.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace JobPortalApi.Repositories;
 
 public interface IReservationLineRepository : IGenericRepository<ReservationLine>
 {
+    Task<ReservationLine> ChangeReservationLineStatusAsync(Guid reservationLineId, int currentStatus);
     Task<IList<ReservationLine>> GetReservationLinesForReservationAsync(Guid reservationId);
     Task<IList<ReservationLine>> GetBoughtReservationLinesForUserAsync(Guid userId);
     Task<IList<ReservationLine>> GetSoldReservationLinesForUserAsync(Guid userId);
@@ -23,7 +25,23 @@ public class ReservationLineRepository : GenericRepository<ReservationLine>, IRe
     {
         _context = context;
     }
-    
+
+    public async Task<ReservationLine> ChangeReservationLineStatusAsync(Guid reservationLineId, int currentStatus)
+    {
+        var foundReservationLine = await _context.ReservationLines
+            .Where(x => x.Id.Equals(reservationLineId) && x.Status == (ReservationStatus) currentStatus)
+            .Include(x => x.Offer)
+            .Include(x => x.Seller)
+            .Include(x => x.Buyer)
+            .Include(x => x.Reservation)
+            .FirstAsync();
+
+        if (foundReservationLine.Status == ReservationStatus.Paid) return foundReservationLine;
+        
+        foundReservationLine.Status = (ReservationStatus) currentStatus + 1;
+        return foundReservationLine;
+    }
+
     public async Task<IList<ReservationLine>> GetReservationLinesForReservationAsync(Guid reservationId)
     {
         var result = await _context.ReservationLines

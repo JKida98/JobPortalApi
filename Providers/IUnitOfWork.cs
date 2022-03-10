@@ -37,6 +37,7 @@ namespace JobPortalApi.Providers
         Task<IList<ReservationDto>> GetSoldReservationsForUserAsync(Guid userId);
         // ReservationLines
         Task<IList<ReservationLineDto>> GetReservationLinesForReservationAsync(Guid reservationId);
+        Task<ReservationLineDto> ChangeReservationLineStatusAsync(Guid reservationLineId, int currentStatus);
     }
 
     public class UnitOfWork : IUnitOfWork
@@ -223,6 +224,13 @@ namespace JobPortalApi.Providers
         {
             var result = await ReservationLines.GetReservationLinesForReservationAsync(reservationId);
             return _mapper.Map<IList<ReservationLineDto>>(result);
+        }
+
+        public async Task<ReservationLineDto> ChangeReservationLineStatusAsync(Guid reservationLineId, int currentStatus)
+        {
+            var result = await ReservationLines.ChangeReservationLineStatusAsync(reservationLineId, currentStatus);
+            await CompleteAsync();
+            return _mapper.Map<ReservationLineDto>(result);
         }
     }
 }
