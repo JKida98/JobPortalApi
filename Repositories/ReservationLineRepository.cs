@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper.QueryableExtensions;
 using JobPortalApi.Database;
 using JobPortalApi.Database.Models;
 using Microsoft.EntityFrameworkCore;
@@ -37,7 +38,7 @@ public class ReservationLineRepository : GenericRepository<ReservationLine>, IRe
             .FirstAsync();
 
         if (foundReservationLine.Status == ReservationStatus.Paid) return foundReservationLine;
-        
+
         foundReservationLine.Status = (ReservationStatus) currentStatus + 1;
         return foundReservationLine;
     }

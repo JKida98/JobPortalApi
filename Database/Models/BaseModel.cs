@@ -1,15 +1,14 @@
 using System;
 
-namespace JobPortalApi.Database.Models
+namespace JobPortalApi.Database.Models;
+
+public class BaseModel
 {
-    public class BaseModel
-    {
-        public Guid Id { get; set; }
+    public Guid Id { get; set; }
 
-        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.Now;
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.Now;
 
-        public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.Now;
+    public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.Now;
 
-        public DateTimeOffset? DeletedAt { get; set; }
-    }
+    public DateTimeOffset? DeletedAt { get; set; }
 }

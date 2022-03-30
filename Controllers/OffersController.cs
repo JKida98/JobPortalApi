@@ -25,12 +25,11 @@ namespace JobPortalApi.Controllers
                 var result = await _unitOfWork.GetAllOffersAsync(userId);
                 return Ok(result);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 return ErrorResponse(e.Message, 404);
             }
         }
-
 
 
         [HttpGet]
@@ -42,11 +41,10 @@ namespace JobPortalApi.Controllers
                 var result = await _unitOfWork.GetOfferByIdAsync(id);
                 return Ok(result);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 return ErrorResponse(e.Message, 404);
             }
-            
         }
 
         [HttpGet]
@@ -58,7 +56,7 @@ namespace JobPortalApi.Controllers
                 var result = await _unitOfWork.GetOffersForUserAsync(userId);
                 return Ok(result);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 return ErrorResponse(e.Message, 404);
             }
@@ -73,12 +71,11 @@ namespace JobPortalApi.Controllers
                 var userId = AuthenticatedUserId();
                 var result = await _unitOfWork.AddOfferAsync(offer, userId);
                 return Ok(result);
-            
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 return ErrorResponse(e.Message, 400);
-            }          
+            }
         }
 
         [HttpDelete]
@@ -90,7 +87,7 @@ namespace JobPortalApi.Controllers
                 var result = await _unitOfWork.RemoveOfferAsync(id);
                 return Ok(result);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 return ErrorResponse(e.Message, 400);
             }

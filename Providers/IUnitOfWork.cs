@@ -19,22 +19,31 @@ namespace JobPortalApi.Providers
         Task<IList<UserDto>> GetAllUsersAsync();
         Task<UserDto> GetUserByIdAsync(Guid id);
         Task<bool> RemoveUserAsync(Guid id);
+
         Task<UserDto> UpdateUserAsync(Guid id, JsonPatchDocument patch);
+
         // Authorization
         Task<string> RegisterUserAsync(UserForRegistration user);
+
         Task<string> LoginUserAsync(UserForLogin user);
+
         // Offers
         Task<IList<OfferDto>> GetAllOffersAsync(Guid userId);
         Task<IList<OfferDto>> GetOffersForUserAsync(Guid userId);
         Task<OfferDto> GetOfferByIdAsync(Guid id);
         Task<OfferDto> AddOfferAsync(OfferForCreation offer, Guid userId);
         Task<bool> RemoveOfferAsync(Guid id);
+
         Task<Offer> UpdateOfferAsync(Guid id, JsonPatchDocument patch);
+
         // Reservations
         Task<ReservationDto> CreateReservationAsync(List<ReservationLineForCreation> reservationLines, Guid userId);
         Task<ReservationDto> GetReservationAsync(Guid reservationId);
         Task<IList<ReservationDto>> GetBoughtReservationsForUserAsync(Guid userId);
         Task<IList<ReservationDto>> GetSoldReservationsForUserAsync(Guid userId);
+
+        Task<bool> CheckIfWholeReservationIsCompletedAsync(Guid reservationId);
+
         // ReservationLines
         Task<IList<ReservationLineDto>> GetReservationLinesForReservationAsync(Guid reservationId);
         Task<ReservationLineDto> ChangeReservationLineStatusAsync(Guid reservationLineId, int currentStatus);
@@ -47,14 +56,13 @@ namespace JobPortalApi.Providers
         private readonly IMapper _mapper;
 
         private readonly IAuthService _authService;
-        private IUnitOfWork _unitOfWorkImplementation;
 
         private IUserRepository Users { get; }
 
         private IOfferRepository Offers { get; }
-        
+
         private IReservationLineRepository ReservationLines { get; }
-        
+
         private IReservationRepository Reservations { get; }
 
         public UnitOfWork(DatabaseContext context, IAuthService authService, IMapper mapper)
@@ -105,7 +113,7 @@ namespace JobPortalApi.Providers
 
         public async Task<IList<OfferDto>> GetAllOffersAsync(Guid userId)
         {
-            var found = await Offers.FindAsync(x=> !x.DeletedAt.HasValue && x.UserId != userId);
+            var found = await Offers.FindAsync(x => !x.DeletedAt.HasValue && x.UserId != userId);
             var mappedList = _mapper.Map<List<OfferDto>>(found);
             return mappedList;
         }
@@ -145,7 +153,6 @@ namespace JobPortalApi.Providers
         public async Task<string> RegisterUserAsync(UserForRegistration user)
         {
             return await _authService.RegisterUserAsync(user);
-            
         }
 
         public async Task<string> LoginUserAsync(UserForLogin user)
@@ -158,12 +165,13 @@ namespace JobPortalApi.Providers
             var result = await Offers.FindAsync(x => x.UserId == userId && !x.DeletedAt.HasValue);
             return _mapper.Map<IList<OfferDto>>(result);
         }
-        
 
-        public async Task<ReservationDto> CreateReservationAsync(List<ReservationLineForCreation> reservationLines, Guid userId)
+
+        public async Task<ReservationDto> CreateReservationAsync(List<ReservationLineForCreation> reservationLines,
+            Guid userId)
         {
             var listOfOffers = new List<Offer>();
-            
+
             foreach (var element in reservationLines)
             {
                 var offer = await Offers.GetByIdAsync(element.OfferId);
@@ -171,17 +179,16 @@ namespace JobPortalApi.Providers
             }
 
             var totalPrice = listOfOffers.Select(x => x.HourlyPrice).Sum();
-            
+
             var reservation = new Reservation()
             {
-                Status = ReservationStatus.Created,
                 TotalPrice = totalPrice
             };
 
             var added = await Reservations.AddAsync(reservation);
             await CompleteAsync();
-            
-            foreach(var offer in listOfOffers)
+
+            foreach (var offer in listOfOffers)
             {
                 var reservationLine = new ReservationLine()
                 {
@@ -193,11 +200,10 @@ namespace JobPortalApi.Providers
                 };
                 await ReservationLines.AddAsync(reservationLine);
             }
-            
+
             await CompleteAsync();
             var result = _mapper.Map<ReservationDto>(added);
             return result;
-
         }
 
         public async Task<ReservationDto> GetReservationAsync(Guid reservationId)
@@ -226,9 +232,25 @@ namespace JobPortalApi.Providers
             return _mapper.Map<IList<ReservationLineDto>>(result);
         }
 
-        public async Task<ReservationLineDto> ChangeReservationLineStatusAsync(Guid reservationLineId, int currentStatus)
+        public async Task<bool> CheckIfWholeReservationIsCompletedAsync(Guid reservationId)
+        {
+            var reservationLines = await ReservationLines.FindAsync(x => x.ReservationId == reservationId);
+            return reservationLines.All(x => x.Status == ReservationStatus.Paid);
+        }
+
+        public async Task<ReservationLineDto> ChangeReservationLineStatusAsync(
+            Guid reservationLineId,
+            int currentStatus
+        )
         {
             var result = await ReservationLines.ChangeReservationLineStatusAsync(reservationLineId, currentStatus);
+            var reservationId = result.ReservationId;
+            var isWholeReservationCompleted = await CheckIfWholeReservationIsCompletedAsync(reservationId);
+            if (isWholeReservationCompleted)
+            {
+                await Reservations.FinishReservation(reservationId);
+            }
+
             await CompleteAsync();
             return _mapper.Map<ReservationLineDto>(result);
         }

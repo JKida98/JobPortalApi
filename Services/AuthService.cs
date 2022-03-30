@@ -22,7 +22,6 @@ namespace JobPortalApi.Services
 
     public class AuthService : IAuthService
     {
-
         private readonly UserManager<User> _userManager;
 
         private readonly AppSettings _appSettings;
@@ -42,12 +41,13 @@ namespace JobPortalApi.Services
                 throw new Exception("Unable to create a user");
             }
 
-            var newUser = new User() { Email = user.Email, UserName = user.Username };
+            var newUser = new User() {Email = user.Email, UserName = user.Username};
             var isCreated = await _userManager.CreateAsync(newUser, user.Password);
             if (isCreated.Succeeded)
             {
                 return GenerateJwtToken(newUser);
             }
+
             throw new Exception("Creation of a user did not succeed");
         }
 
@@ -66,12 +66,12 @@ namespace JobPortalApi.Services
             {
                 throw new Exception("Invalid credentials for a user");
             }
+
             return GenerateJwtToken(found);
         }
 
         private string GenerateJwtToken(User user)
         {
-
             var key = Encoding.ASCII.GetBytes(_appSettings.Secret);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -82,14 +82,14 @@ namespace JobPortalApi.Services
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 }),
                 Expires = DateTime.UtcNow.AddMinutes(360),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key),
+                    SecurityAlgorithms.HmacSha256Signature)
             };
 
             var jwtTokenHandler = new JwtSecurityTokenHandler();
             var token = jwtTokenHandler.CreateToken(tokenDescriptor);
             var jwtToken = jwtTokenHandler.WriteToken(token);
             return jwtToken;
-
-        }       
+        }
     }
 }

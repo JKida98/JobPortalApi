@@ -19,6 +19,7 @@ using JobPortalApi.Database;
 using JobPortalApi.Database.Models;
 using JobPortalApi.Providers;
 using AutoMapper;
+using JobPortalApi.Hubs;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using JobPortalApi.Services;
 
@@ -55,11 +56,11 @@ namespace JobPortalApi
             services.AddDbContext<DatabaseContext>(
                 opt => opt.UseMySql(sqlConfig, new MySqlServerVersion(new Version())));
 
-            services.AddIdentity<User, UserRole>()
+            services.AddIdentity<User, Role>()
                 .AddEntityFrameworkStores<DatabaseContext>()
                 .AddDefaultTokenProviders()
-                .AddUserStore<UserStore<User, UserRole, DatabaseContext, Guid>>()
-                .AddRoleStore<RoleStore<UserRole, DatabaseContext, Guid>>();
+                .AddUserStore<UserStore<User, Role, DatabaseContext, Guid>>()
+                .AddRoleStore<RoleStore<Role, DatabaseContext, Guid>>();
 
 
             services.Configure<IdentityOptions>(options =>
@@ -76,6 +77,7 @@ namespace JobPortalApi
 
             IMapper mapper = mapperConfig.CreateMapper();
 
+            services.AddSignalR();
             services.AddSingleton(mapper);
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -140,7 +142,11 @@ namespace JobPortalApi
             app.UseRouting();
             app.UseCors("Open");
             app.UseAuthorization();
-            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapHub<ChatHub>("/chatHub");
+                endpoints.MapControllers();
+            });
         }
     }
 
